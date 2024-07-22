@@ -16,40 +16,29 @@ const Transactions = () => {
     "https://api.devnet.solana.com",
     "confirmed",
   );
-  const publicKey = new PublicKey(recipientPublicKey);
   const handleTopUp = async () => {
     try {
-      const airdropSignature = await connection.requestAirdrop(
-        publicKey,
-        2 * LAMPORTS_PER_SOL,
-      );
-      await connection.confirmTransaction(airdropSignature);
-      console.log("Airdrop successful");
+      const response = await fetch('/api/topup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          publicKey: recipientPublicKey,
+          amount,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setMessage(`Successfully topped up ${amount} SOL to ${recipientPublicKey}`);
+      } else {
+        setMessage(`Error: ${data.error} Details: ${data.details}`);
+      }
     } catch (error) {
-      console.error("Airdrop failed:", error);
+      console.error('Error topping up:', error);
+      setMessage('Error occurred while topping up');
     }
-    // try {
-    //   const response = await fetch('/api/topup', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({
-    //       publicKey: recipientPublicKey,
-    //       amount,
-    //     }),
-    //   });
-    //
-    //   const data = await response.json();
-    //   if (response.ok) {
-    //     setMessage(`Successfully topped up ${amount} SOL to ${recipientPublicKey}`);
-    //   } else {
-    //     setMessage(`Error: ${data.error} Details: ${data.details}`);
-    //   }
-    // } catch (error) {
-    //   console.error('Error topping up:', error);
-    //   setMessage('Error occurred while topping up');
-    // }
   };
 
   return (
