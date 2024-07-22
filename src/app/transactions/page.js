@@ -1,93 +1,95 @@
 "use client";
 import { useWallet } from "@/context/WalletContext";
-import {
-  Connection,
-  Transaction,
-  SystemProgram,
-  LAMPORTS_PER_SOL, Keypair,
-} from "@solana/web3.js";
-import {Button, Box, Typography, TextField, Alert} from "@mui/material";
 import { useRouter } from "next/navigation";
-import {useState} from "react";
-import {log} from "next/dist/server/typescript/utils";
+import { useState } from "react";
+import { Box, Button, TextField, Typography } from "@mui/material";
+import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
-export default function Transactions() {
-  const { wallet, balance, setBalance } = useWallet();
-  const [amount, setAmount] = useState('');
-  const [recipient, setRecipient] = useState('');
-  const [error, setError] = useState('');
-  const connection = new Connection('https://api.devnet.solana.com');
+const Transactions = () => {
+  const { wallet, balance } = useWallet();
+  const [amount, setAmount] = useState("");
+  const [recipientPublicKey, setRecipientPublicKey] = useState("");
+  const [message, setMessage] = useState("");
   const router = useRouter();
-
-  const sendTransaction = async () => {
-    if (!wallet) {
-      setError('Сначала создайте кошелёк');
-      return;
-    }
-
+  console.log(wallet);
+  const connection = new Connection(
+    "https://api.devnet.solana.com",
+    "confirmed",
+  );
+  const publicKey = new PublicKey(recipientPublicKey);
+  const handleTopUp = async () => {
     try {
-      const transaction = new Transaction().add(
-          SystemProgram.transfer({
-            fromPubkey: wallet.publicKey,
-            toPubkey: recipient,
-            lamports: amount * LAMPORTS_PER_SOL,
-          })
+      const airdropSignature = await connection.requestAirdrop(
+        publicKey,
+        2 * LAMPORTS_PER_SOL,
       );
-
-      const signature = await connection.sendTransaction(transaction, [wallet]);
-      await connection.confirmTransaction(signature, 'confirmed');
-
-      const walletBalance = await connection.getBalance(wallet.publicKey);
-      setBalance(walletBalance / LAMPORTS_PER_SOL);
-      setError('');
-    } catch (err) {
-      setError(`Ошибка при отправке транзакции: ${err.message}`);
+      await connection.confirmTransaction(airdropSignature);
+      console.log("Airdrop successful");
+    } catch (error) {
+      console.error("Airdrop failed:", error);
     }
+    // try {
+    //   const response = await fetch('/api/topup', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({
+    //       publicKey: recipientPublicKey,
+    //       amount,
+    //     }),
+    //   });
+    //
+    //   const data = await response.json();
+    //   if (response.ok) {
+    //     setMessage(`Successfully topped up ${amount} SOL to ${recipientPublicKey}`);
+    //   } else {
+    //     setMessage(`Error: ${data.error} Details: ${data.details}`);
+    //   }
+    // } catch (error) {
+    //   console.error('Error topping up:', error);
+    //   setMessage('Error occurred while topping up');
+    // }
   };
 
   return (
-      <Box sx={{ padding: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-          <Button variant="contained" onClick={() => router.push('/wallet')}>
-            Назад
-          </Button>
-          <Typography variant="h6">Баланс: {balance} SOL</Typography>
-        </Box>
-        {!wallet ? (
-            <Box>
-              <Alert severity="warning">Сначала создайте кошелёк</Alert>
-              <Button variant="contained" onClick={() => router.push('/wallet')}>
-                Создать кошелёк
-              </Button>
-            </Box>
-        ) : (
-            <Box>
-              <TextField
-                  fullWidth
-                  label="Количество SOL"
-                  variant="outlined"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  sx={{ marginBottom: 2 }}
-              />
-              <TextField
-                  fullWidth
-                  label="Адрес получателя"
-                  variant="outlined"
-                  value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
-                  sx={{ marginBottom: 2 }}
-              />
-              {error && (
-                  <Alert severity="error" sx={{ marginBottom: 2 }}>
-                    {error}
-                  </Alert>
-              )}
-              <Button variant="contained" onClick={sendTransaction}>
-                Отправить
-              </Button>
-            </Box>
-        )}
+    <Box sx={{ padding: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 2,
+        }}
+      >
+        <Button variant="contained" onClick={() => router.push("/")}>
+          Назад
+        </Button>
+        <Typography variant="h6">Баланс: {balance} SOL</Typography>
       </Box>
+      <Box>
+        <TextField
+          fullWidth
+          label="Количество SOL"
+          variant="outlined"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          sx={{ marginBottom: 2 }}
+        />
+        <TextField
+          fullWidth
+          label="Адрес получателя"
+          variant="outlined"
+          value={recipientPublicKey}
+          onChange={(e) => setRecipientPublicKey(e.target.value)}
+          sx={{ marginBottom: 2 }}
+        />
+        <Button variant="contained" onClick={handleTopUp}>
+          Пополнить
+        </Button>
+      </Box>
+      {message && <p>{message}</p>}
+    </Box>
   );
-}
+};
+
+export default Transactions;
