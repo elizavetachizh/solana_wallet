@@ -1,25 +1,56 @@
-import Image from "next/image";
 import styles from "./page.module.css";
+import { Box, Button } from "@mui/material";
 import Link from "next/link";
-
 export default function Home() {
   return (
-      <div>
+    <main className={styles.main}>
+      <Box
+        sx={{
+          padding: 2,
+          "@media (max-width: 600px)": {
+            padding: 1,
+          },
+        }}
+      >
         <h1>Welcome to Solana Wallet</h1>
-        <nav>
-          <ul>
-            <li>
-              <Link legacyBehavior  href="/wallet">
-                <a>Кошелек</a>
+        <Box
+          component="nav"
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            padding: 2,
+            bgcolor: "background.paper",
+            borderRadius: 1,
+            boxShadow: 1,
+          }}
+        >
+          <Box
+            component="ul"
+            sx={{
+              listStyle: "none",
+              display: "flex",
+              gap: 2,
+              padding: 0,
+              margin: 0,
+            }}
+          >
+            <Box component="li">
+              <Link legacyBehavior href="/wallet">
+                <Button variant="contained" color="primary" component="a">
+                  Кошелек
+                </Button>
               </Link>
-            </li>
-            <li>
-              <Link legacyBehavior href="/transactions">
-                <a href={"/transactions"}>Транзакции</a>
+            </Box>
+            <Box component="li">
+              <Link href="/transactions" legacyBehavior>
+                <Button variant="contained" color="secondary" component="a">
+                  Транзакции
+                </Button>
               </Link>
-            </li>
-          </ul>
-        </nav>
-      </div>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </main>
   );
 }
